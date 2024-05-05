@@ -11,17 +11,18 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 contract TheFriendshipToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, ERC20PausableUpgradeable, OwnableUpgradeable, ERC20PermitUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers();
+
+        
     }
 
     // initializes contract for "TheFriendshipToken" 
-    function initialize(address initialOwner) initializer public {
+    function initialize() initializer public {   
         __ERC20_init("TheFriendshipToken", "TFT");
         __ERC20Burnable_init();
         __ERC20Pausable_init();
-        __Ownable_init(initialOwner);
+        __Ownable_init(msg.sender);
         __ERC20Permit_init("TFT");
-    }
+        }
 
     mapping (address => uint256) private _balances;
 
@@ -37,11 +38,12 @@ contract TheFriendshipToken is Initializable, ERC20Upgradeable, ERC20BurnableUpg
 
     // functions to mint and burn tokens when someone's post to the Discord is upvoted or downvoted
     function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
+        _balances[to] += amount;
     }
 
     function burn(address to, uint256 amount) public onlyOwner {
-        _burn(to, amount);
+        require(_balances[to] >= amount);
+        _balances[to] -= amount;
     }
 
     // functions to find the balance of an address or transfer tokens between addresses
@@ -49,11 +51,11 @@ contract TheFriendshipToken is Initializable, ERC20Upgradeable, ERC20BurnableUpg
         return _balances[_owner];
     }
 
-    function transfer(address _to, uint256 _value) override public returns (bool) {
-        require(_balances[msg.sender] >= _value);
-        _balances[msg.sender] -= _value;
+    function transfer(address _to, address _from, uint256 _value) public returns (bool) {
+        require(_balances[_from] >= _value);
+        _balances[_from] -= _value;
         _balances[_to] += _value;
-        emit Transfer(msg.sender, _to, _value);
+        emit Transfer(_from, _to, _value);
         return true;
     }
 
